@@ -1,0 +1,22 @@
+{
+  "short_name": "Cognitio+",
+  "name": "Cogniti+ - Your Partner in Resilience",
+  "description": "Empowering Local Stakeholders to Seamlessly Integrate Mental Health and Substance Abuse Services into Primary Healthcare.",
+  "icons": [
+    {
+      "src": "https://appimize.app/assets/apps/user_1097/images/b2e254093bca_935_1097.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://appimize.app/assets/apps/user_1097/images/b2e254093bca_935_1097.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#b425aa",
+  "background_color": "#f8f9fa",
+  "orientation": "portrait"
+}
