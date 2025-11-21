@@ -15,10 +15,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;500;600;700&family=Roboto+Condensed:wght@300;400;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
 
     <style>
-        /* Critical CSS fixes for standalone file */
+        /* Custom Scrollbar & Animation Enhancements */
         body { background-color: #f8f9fa; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            background-color: rgba(180, 37, 170, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -27,26 +40,14 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- 1. ICON SYSTEM (Mocking lucide-react for single file) ---
-        // We define a helper to create SVG icons to avoid importing 50+ files
-        const CreateIcon = ({ path, size = 24, className = "", fill="none" }) => (
-            <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width={size} 
-                height={size} 
-                viewBox="0 0 24 24" 
-                fill={fill} 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className={className}
-            >
+        // --- 1. ICON ENGINE (Replaces lucide-react import) ---
+        // Mapping essential SVG paths for the app to function without npm
+        const CreateIcon = ({ path, size = 24, className = "", fill="none", color="currentColor" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {path}
             </svg>
         );
 
-        // Essential Icon Paths (Mapped from Lucide)
         const ICONS_PATHS = {
             Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
             User: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
@@ -69,40 +70,33 @@
             Sparkles: <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></>,
             TrendingUp: <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>,
             Award: <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
-            Building: <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M16 18h.01"/>,
             Users: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>,
             Gift: <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>,
             Play: <polygon points="5 3 19 12 5 21 5 3"/>,
-            PlayCircle: <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>,
             BookOpen: <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>,
-            Target: <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>,
             Wind: <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>,
             Smile: <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>,
             CheckSquare: <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>,
             DollarSign: <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>,
-            FileText: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>,
             Bell: <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>,
             Smartphone: <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>,
             Facebook: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
         };
 
-        // Dynamic Lucide Object
+        // Dynamically create components for usage
         const Lucide = {};
         Object.keys(ICONS_PATHS).forEach(key => {
             Lucide[key] = (props) => <CreateIcon path={ICONS_PATHS[key]} {...props} />;
         });
 
+        // Destructure for cleaner code
         const { 
-            Shield, User, Settings, Moon, Globe, Target, LogOut, ChevronRight, Home, Activity, 
-            BookOpen, Calendar, Menu, X, Heart, Brain, Zap, Music, Smile, ArrowLeft, Play, 
-            CheckCircle, Plus, Mail, Lock, Eye, EyeOff, Facebook, Bell, Smartphone, FileText, 
-            DollarSign, Clock, Search, Filter, Check, AlertCircle, Briefcase, Sparkles, 
-            ArrowRight, TrendingUp, Users, Award, BarChart2, Thermometer, Wind, MessageSquare, 
-            Share2, ThumbsUp, Video, Clipboard, List, AlertTriangle, Flame, CheckSquare, 
-            RefreshCw, PlayCircle, Building, Gift
+            Shield, User, Settings, Moon, Home, Activity, BookOpen, Menu, X, Heart, Zap, Smile, 
+            ArrowLeft, Play, CheckCircle, Mail, Lock, Eye, EyeOff, Facebook, Bell, Smartphone, 
+            DollarSign, Check, Sparkles, ArrowRight, TrendingUp, Users, Award, Wind, CheckSquare 
         } = Lucide;
 
-        // --- 2. GLOBAL STYLES ---
+        // --- 2. GLOBAL STYLES & BRANDING ---
         const GlobalStyles = () => (
           <style>{`
             :root {
@@ -111,29 +105,26 @@
               --cognitio-gold: #D4AF37;
               --cognitio-neutral: #f8f9fa;
             }
-
             body {
               font-family: 'Roboto Condensed', sans-serif;
               background-color: var(--cognitio-neutral);
               color: #334155;
             }
-
             h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
             .brand-font { font-family: 'Montserrat', sans-serif; }
             .oswald-font { font-family: 'Oswald', sans-serif; }
-
+            
             .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
             @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             
-            /* Well-Be Charts */
+            /* For Well-Be Charts */
             .bar-graph { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
             .bar { flex: 1; background: #e2e8f0; border-radius: 2px; transition: height 0.5s ease; }
             .bar.active { background: #b425aa; }
           `}</style>
         );
 
-        // --- 3. CONSTANTS & DATA ---
-        const BRAND = { primary: '#b425aa', purple: '#c80ec9', gold: '#D4AF37', neutral: '#f8f9fa' };
+        // Asset Constants
         const ICONS = {
             logo: 'https://579557-c8ed3d25e86041dcbd15c382ded585e0-1-latest.app.mgx.dev/assets/cognitio-main-logo.png',
             resilience: 'https://appimize.app/assets/apps/user_1097/images/20aa97ab307c_945_1097.png',
@@ -149,66 +140,7 @@
             technology: 'https://appimize.app/assets/apps/user_1097/images/a00e6e94af97_251_1097.png'
         };
 
-        // Onboarding Config
-        const USER_TYPES = [
-          { id: 'individual', label: 'Individual', icon: User, desc: 'Personal growth & resilience.' },
-          { id: 'mhp', label: 'Mental Health Pro', icon: Shield, desc: 'Practice management & referrals.' },
-          { id: 'org', label: 'Organization', icon: Building, desc: 'Employee wellness & compliance.' },
-          { id: 'cl', label: 'Community Leader', icon: Users, desc: 'Civic mobilization & support.' },
-        ];
-
-        const ONBOARDING_DATA = {
-          individual: {
-            steps: [
-              { title: "Identity", target: "Profile Starter", incentive: "Basic Access", task: "Self-identification" },
-              { title: "Needs", target: "Goal Setter", incentive: "Priority Suggestions", task: "Select 1+ Personal Goal" },
-              { title: "Explore", target: "Curious Mind", incentive: "10% Discount Coupon", task: "Save 3 services to Wishlist" },
-              { title: "Context", target: "Support Eligibility", incentive: "Subsidized Rates", task: "Vulnerability Assessment" },
-              { title: "Simulate", target: "Ready", incentive: "5-Star Readiness", task: "Complete Ethics Tutorial" },
-              { title: "Pricing", target: "Informed", incentive: "Free Workshop", task: "View Subsidy Breakdown" },
-              { title: "Value", target: "Community Contributor", incentive: "Referral Bonus", task: "Join Research Study" },
-              { title: "Summary", target: "Service Access Granted", incentive: "Welcome Badge", task: "Sign Terms & Conditions" },
-            ]
-          },
-          mhp: {
-            steps: [
-              { title: "Credentials", target: "Verified Partner", incentive: "Network Listing", task: "Upload License" },
-              { title: "Goals", target: "Practice Builder", incentive: "Premium Trial (1 Mo)", task: "Select Professional Goals" },
-              { title: "Tools", target: "Tech Savvy", incentive: "Boosted Profile", task: "Select EHR & supplementary tool" },
-              { title: "Capacity", target: "Pro Bono Hero", incentive: "Priority Referral Status", task: "Commit 5hrs/mo Pro Bono" },
-              { title: "Intake Sim", target: "System Expert", incentive: "Readiness Rating", task: "Complete Intake Simulation" },
-              { title: "Terms", target: "Partner", incentive: "Commission Reduced", task: "Agree to Fee Structure" },
-              { title: "Collab", target: "Content Creator", incentive: "Fee Reduction", task: "Propose a Webinar" },
-              { title: "Contract", target: "Certified Practitioner", incentive: "Digital Seal", task: "E-Sign Service Agreement" },
-            ]
-          },
-          org: {
-            steps: [
-              { title: "Profile", target: "Org Initiator", incentive: "Dashboard Access", task: "Assign Champion" },
-              { title: "Strategy", target: "Strategist", incentive: "Tier 1 Pricing Preview", task: "Define 3 Strategic Goals" },
-              { title: "Services", target: "Planner", incentive: "Dedicated Account Manager", task: "Select Data & Content Services" },
-              { title: "Demographics", target: "Data Driven", incentive: "Curated Reports", task: "Provide Target Group Data" },
-              { title: "Admin Sim", target: "Admin Pro", incentive: "Enrollment Cap Waived", task: "Invite 5 Test Users" },
-              { title: "Quote", target: "Budgeter", incentive: "Extra Training Session", task: "Generate Dynamic Quote" },
-              { title: "Partnership", target: "Sponsor", incentive: "Co-branded Report", task: "Select Sponsorship Option" },
-              { title: "Agreement", target: "Strategic Partner", incentive: "Integration Kickoff", task: "Sign MoA" },
-            ]
-          },
-          cl: {
-            steps: [
-              { title: "Verification", target: "Community Anchor", incentive: "Resource Hub", task: "Verify Role" },
-              { title: "Priorities", target: "Voice of People", incentive: "Template Library", task: "Identify 3 Community Needs" },
-              { title: "Frameworks", target: "Mobilizer", incentive: "Summit Invitation", task: "Select Outreach Frameworks" },
-              { title: "Mapping", target: "Surveyor", incentive: "Event Promotion", task: "Map Vulnerable Areas" },
-              { title: "Resource Sim", target: "Connector", incentive: "Leadership Training", task: "Map 3 Community Assets" },
-              { title: "Funding", target: "Resourceful", incentive: "Co-branded Materials", task: "Identify Funding Source" },
-              { title: "Joint Action", target: "Impact Maker", incentive: "Policy Feedback Loop", task: "Formalize Joint Campaign" },
-              { title: "Launch", target: "Impact Catalyst", incentive: "Project Kickoff", task: "Sign MoA" },
-            ]
-          }
-        };
-
-        // --- 4. UI COMPONENTS ---
+        // --- 3. UI PRIMITIVES ---
         const Button = ({ className, variant = 'primary', children, ...props }) => {
             const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2";
             const variants = {
@@ -229,24 +161,22 @@
             </button>
         );
 
-        // --- 5. LAYOUT COMPONENTS ---
+        // --- 4. LAYOUT COMPONENTS ---
         const CognitioLogo = ({ size = 'md' }) => {
             const sizes = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-24 h-24', xl: 'w-32 h-32' };
             return <img src={ICONS.logo} alt="Cognitio+ Logo" className={`${sizes[size]} object-contain`} />;
         };
 
         const GreetingMessage = () => {
-            const getGreeting = () => {
-                const hour = new Date().getHours();
-                if (hour < 12) return { text: "Good morning", msg: "Start your day with mindfulness.", icon: "🌅" };
-                if (hour < 18) return { text: "Good afternoon", msg: "Hope your day is going well.", icon: "☀️" };
-                return { text: "Good evening", msg: "Time to wind down.", icon: "🌙" };
-            };
-            const g = getGreeting();
+            const hour = new Date().getHours();
+            let greeting = { text: "Good evening", msg: "Time to wind down.", icon: "🌙" };
+            if (hour < 12) greeting = { text: "Good morning", msg: "Start your day with mindfulness.", icon: "🌅" };
+            else if (hour < 18) greeting = { text: "Good afternoon", msg: "Hope your day is going well.", icon: "☀️" };
+
             return (
                 <div className="mb-6 text-white">
-                    <h2 className="text-3xl font-bold">{g.text} {g.icon}</h2>
-                    <p className="text-purple-100 font-medium">{g.msg}</p>
+                    <h2 className="text-3xl font-bold">{greeting.text} {greeting.icon}</h2>
+                    <p className="text-purple-100 font-medium">{greeting.msg}</p>
                 </div>
             );
         };
@@ -307,26 +237,21 @@
             );
         };
 
-        // --- 6. FEATURE COMPONENTS ---
+        // --- 5. FEATURE COMPONENTS ---
 
-        // Stats & Showcase
         const StatsInfographic = () => (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8 px-4 w-full max-w-6xl mx-auto">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4"><Users size={24}/></div>
-                    <h3 className="text-4xl font-bold text-gray-900 mb-2">1 in 5</h3>
-                    <p className="text-gray-500 text-sm">Adults experience mental illness each year.</p>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4"><TrendingUp size={24}/></div>
-                    <h3 className="text-4xl font-bold text-gray-900 mb-2">60%</h3>
-                    <p className="text-gray-500 text-sm">Of people with mental health conditions go untreated.</p>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4"><Award size={24}/></div>
-                    <h3 className="text-4xl font-bold text-gray-900 mb-2">4x</h3>
-                    <p className="text-gray-500 text-sm">Improvement in resilience with regular practice.</p>
-                </div>
+                {[
+                    { icon: Users, val: "1 in 5", desc: "Adults experience mental illness each year.", color: "purple" },
+                    { icon: TrendingUp, val: "60%", desc: "Of people with mental health conditions go untreated.", color: "green" },
+                    { icon: Award, val: "4x", desc: "Improvement in resilience with regular practice.", color: "blue" }
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                        <div className={`w-12 h-12 bg-${stat.color}-100 text-${stat.color}-600 rounded-full flex items-center justify-center mb-4`}><stat.icon size={24}/></div>
+                        <h3 className="text-4xl font-bold text-gray-900 mb-2">{stat.val}</h3>
+                        <p className="text-gray-500 text-sm">{stat.desc}</p>
+                    </div>
+                ))}
             </div>
         );
 
@@ -357,7 +282,16 @@
             );
         };
 
-        // Auth Modal
+        const SubscriptionCTA = ({ onSubscribe }) => (
+            <section className="relative max-w-5xl mx-auto px-6 py-16 bg-gradient-to-r from-[#b425aa] to-[#c80ec9] rounded-3xl shadow-2xl overflow-hidden my-12 text-center">
+                <div className="relative z-10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f3e329] text-[#c80ec9] mb-6 shadow-lg"><Sparkles className="h-8 w-8" /></div>
+                    <h2 className="text-3xl md:text-4xl font-bold font-[Oswald] text-white mb-6">Unlock Advanced Wellness</h2>
+                    <Button onClick={onSubscribe} size="lg" className="bg-[#f3e329] text-[#c80ec9] px-10 py-4 text-lg font-[Montserrat] rounded-full mx-auto">Subscribe Now <ArrowRight className="ml-2" /></Button>
+                </div>
+            </section>
+        );
+
         const AuthModal = ({ isOpen, onClose, onLogin }) => {
             const [activeTab, setActiveTab] = useState('login');
             const [formData, setFormData] = useState({ email: '', password: '', name: '' });
@@ -372,10 +306,9 @@
                     setIsLoading(false);
                     onLogin({
                         id: 'user_' + Date.now(),
-                        name: formData.name || 'User',
+                        name: formData.name || 'Test User',
                         email: formData.email,
-                        userType: 'individual',
-                        onboardingCompleted: false // Trigger wizard
+                        userType: 'individual'
                     });
                 }, 1000);
             };
@@ -414,7 +347,6 @@
             );
         };
 
-        // Settings Component
         const SettingsComponent = ({ onBack }) => (
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center gap-4 mb-8">
@@ -431,20 +363,26 @@
             </div>
         );
 
-        // WELL-BE MONITOR (Enhanced)
+        // --- 6. WELL-BE COMPONENT (Enhanced & Completed) ---
         const WellBe = ({ onBack }) => {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [measuring, setMeasuring] = useState(false);
             const [progress, setProgress] = useState(0);
             const [result, setResult] = useState(null);
 
+            // Simulate Sensor Reading
             const startMeasurement = () => {
                 setMeasuring(true);
                 setProgress(0);
                 const interval = setInterval(() => {
                     setProgress(p => {
-                        if (p >= 100) { clearInterval(interval); setMeasuring(false); setResult(78); return 100; }
-                        return p + 1;
+                        if (p >= 100) {
+                            clearInterval(interval);
+                            setMeasuring(false);
+                            setResult(78 + Math.floor(Math.random() * 10)); 
+                            return 100;
+                        }
+                        return p + 1.5;
                     });
                 }, 50);
             };
@@ -454,14 +392,14 @@
                     <div className="bg-gradient-to-r from-[#b425aa] to-[#c80ec9] rounded-3xl p-6 text-white shadow-xl flex flex-col items-center justify-center py-10 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
                         <div className="w-40 h-40 rounded-full border-8 border-white/20 flex items-center justify-center relative z-10">
-                            <div className="text-center"><span className="text-5xl font-bold font-['Oswald']">85</span><p className="text-xs uppercase">Wellness Score</p></div>
+                            <div className="text-center"><span className="text-5xl font-bold font-['Oswald']">{result || 85}</span><p className="text-xs uppercase">Wellness Score</p></div>
                             <svg className="absolute top-0 left-0 w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="white" strokeWidth="8" strokeDasharray="289" strokeDashoffset="50" strokeLinecap="round" /></svg>
                         </div>
                         <p className="mt-4 text-white/90 font-medium">You are well recovered today!</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="flex gap-2 mb-2 text-gray-500 text-sm"><Moon size={16} className="text-indigo-500"/> Sleep</div><p className="text-2xl font-bold">7h 42m</p></div>
-                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="flex gap-2 mb-2 text-gray-500 text-sm"><Activity size={16} className="text-pink-500"/> HRV</div><p className="text-2xl font-bold">65 ms</p></div>
+                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="flex gap-2 mb-2 text-gray-500 text-sm"><Activity size={16} className="text-pink-500"/> HRV</div><p className="text-2xl font-bold">{result ? result - 15 : 65} ms</p></div>
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="flex gap-2 mb-2 text-gray-500 text-sm"><Heart size={16} className="text-red-500"/> Heart Rate</div><p className="text-2xl font-bold">72 bpm</p></div>
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"><div className="flex gap-2 mb-2 text-gray-500 text-sm"><Zap size={16} className="text-yellow-500"/> Stress</div><p className="text-2xl font-bold">Low</p></div>
                     </div>
@@ -473,7 +411,7 @@
                     <div className="relative w-64 h-64 mb-8">
                         <div className="absolute inset-0 bg-gray-900 rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200">
                             {measuring ? (
-                                <><div className="absolute inset-0 bg-red-500/20 animate-pulse"></div><Heart className="text-red-500 animate-bounce" size={64} /><div className="absolute bottom-8 text-white font-mono text-xl">Scanning...</div></>
+                                <><div className="pulse-ring"></div><Heart className="text-red-500 animate-bounce relative z-10" size={64} /><div className="absolute bottom-8 text-white font-mono text-xl relative z-10">Scanning...</div></>
                             ) : result ? (
                                 <div className="text-center"><span className="text-5xl font-bold text-green-400">{result}</span><p className="text-white text-sm uppercase mt-2">HRV Score</p></div>
                             ) : (
@@ -488,7 +426,7 @@
                     {measuring ? (
                         <div className="text-center"><h3 className="text-xl font-bold">Measuring HRV</h3><p className="text-gray-500">Remain still...</p></div>
                     ) : result ? (
-                        <div className="text-center space-y-4"><h3 className="text-2xl font-bold">Complete</h3><div className="flex gap-3 justify-center"><Button onClick={() => { setResult(null); setProgress(0); }} variant="outline">Discard</Button><Button onClick={() => setActiveTab('dashboard')}>Save Data</Button></div></div>
+                        <div className="text-center space-y-4"><h3 className="text-2xl font-bold">Measurement Complete</h3><div className="flex gap-3 justify-center"><Button onClick={() => { setResult(null); setProgress(0); }} variant="outline">Discard</Button><Button onClick={() => setActiveTab('dashboard')}>Save Data</Button></div></div>
                     ) : (
                         <Button onClick={startMeasurement} size="lg" className="rounded-full px-12 py-4 text-lg shadow-xl">Start Measurement</Button>
                     )}
@@ -503,109 +441,12 @@
                             <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-2 text-sm font-bold capitalize rounded-lg transition-all ${activeTab === tab ? 'bg-white text-[#b425aa] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{tab}</button>
                         ))}
                     </div>
-                    <div className="min-h-[400px]">{activeTab === 'dashboard' ? renderDashboard() : activeTab === 'measure' ? renderMeasure() : <div className="text-center py-10"><Sparkles className="mx-auto mb-4 text-yellow-400" size={32}/><p>Upgrade to Pro for Insights</p></div>}</div>
+                    <div className="min-h-[400px]">{activeTab === 'dashboard' ? renderDashboard() : activeTab === 'measure' ? renderMeasure() : <div className="text-center py-10"><Sparkles className="mx-auto mb-4 text-yellow-400" size={32}/><h3 className="font-bold text-lg">Premium Insights</h3><p className="text-gray-500">Upgrade to view detailed correlation analysis.</p></div>}</div>
                 </div>
             );
         };
 
-        // ONBOARDING WIZARD
-        const ProgressBar = ({ current, total }) => (
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6"><div className="bg-[#b425aa] h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${(current / total) * 100}%` }}></div></div>
-        );
-
-        const GamificationHUD = ({ badges, nextIncentive }) => (
-            <div className="bg-white border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 z-40 shadow-sm animate-fadeIn">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[60%]">
-                    {badges.length === 0 && <span className="text-xs text-gray-400 italic">Badges appear here...</span>}
-                    {badges.map((badge, i) => <span key={i} className="flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-bold whitespace-nowrap"><Award size={12} /> {badge}</span>)}
-                </div>
-                <div className="flex items-center gap-2 text-right"><div className="text-xs"><p className="text-gray-500 uppercase tracking-wider font-bold">Next Reward</p><p className="text-[#b425aa] font-bold">{nextIncentive}</p></div><div className="bg-purple-100 p-2 rounded-full text-[#b425aa]"><Gift size={16} /></div></div>
-            </div>
-        );
-
-        const OnboardingWizard = ({ onComplete }) => {
-            const [step, setStep] = useState(0);
-            const [userType, setUserType] = useState(null);
-            const [badges, setBadges] = useState([]);
-            const [isSimulating, setIsSimulating] = useState(false);
-            
-            const stepData = userType && step > 0 ? ONBOARDING_DATA[userType].steps[step - 1] : null;
-
-            const handleNext = () => {
-                if (stepData) setBadges([...badges, stepData.target]);
-                if (step === 8) {
-                    onComplete({ type: userType, badges: badges, onboardingCompleted: true });
-                } else {
-                    setStep(step + 1);
-                }
-            };
-
-            const runSimulation = () => {
-                setIsSimulating(true);
-                setTimeout(() => setIsSimulating(false), 2500);
-            };
-
-            if (step === 0) return (
-                <div className="max-w-4xl mx-auto py-12 px-4">
-                    <div className="text-center mb-10"><h1 className="text-4xl font-bold text-gray-900 mb-4 brand-font">Welcome to Cognitio+</h1><p className="text-xl text-gray-500">Select your role.</p></div>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        {USER_TYPES.map((type) => (
-                            <button key={type.id} onClick={() => { setUserType(type.id); setStep(1); }} className="flex items-start gap-4 p-6 bg-white rounded-2xl border-2 border-transparent hover:border-[#b425aa] hover:shadow-xl transition-all text-left group">
-                                <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-[#b425aa] group-hover:bg-[#b425aa] group-hover:text-white transition-colors"><type.icon size={28} /></div>
-                                <div><h3 className="text-xl font-bold text-gray-900">{type.label}</h3><p className="text-gray-500 mt-1">{type.desc}</p></div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="min-h-screen bg-gray-50 flex flex-col">
-                    <GamificationHUD badges={badges} nextIncentive={stepData?.incentive || "Completion"} />
-                    <div className="max-w-2xl mx-auto w-full px-4 py-8 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 mb-6 text-sm text-gray-500"><span className="uppercase tracking-widest">{USER_TYPES.find(u => u.id === userType)?.label} Route</span><span>•</span><span>Step {step} of 8</span></div>
-                        <ProgressBar current={step} total={8} />
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex-1 animate-fadeIn relative overflow-hidden">
-                            <div className="mb-8"><h2 className="text-3xl font-bold text-gray-900 brand-font mb-2">{stepData?.title}</h2><p className="text-gray-500">Target: <span className="font-bold text-[#b425aa]">{stepData?.task}</span></p></div>
-                            <div className="space-y-6 mb-8">
-                                {step === 2 && <div className="space-y-3">{['Improve Resilience', 'Manage Stress', 'Better Sleep'].map(g => <label key={g} className="flex items-center p-4 border rounded-xl hover:bg-gray-50 cursor-pointer"><input type="checkbox" className="w-5 h-5 text-[#b425aa]" /><span className="ml-3 font-medium">{g}</span></label>)}</div>}
-                                {step === 3 && <div className="grid grid-cols-2 gap-4">{['Modules', 'Coaching', 'Biometrics'].map(s=><div key={s} className="border p-4 rounded-xl text-center hover:border-[#b425aa] cursor-pointer"><span className="font-bold block">{s}</span></div>)}</div>}
-                                {step === 5 && <div className="bg-gray-900 rounded-xl p-6 text-white text-center">{isSimulating ? <div className="py-10 animate-pulse">Simulating...</div> : <div className="py-8"><PlayCircle size={48} className="mx-auto mb-4 text-green-400"/><button onClick={runSimulation} className="bg-white text-gray-900 px-6 py-2 rounded-full font-bold">Start Task</button></div>}</div>}
-                                {step === 6 && <div className="bg-purple-50 p-6 rounded-xl border border-purple-100"><h3 className="font-bold flex gap-2"><DollarSign/> Est. Investment</h3><div className="flex justify-between mt-4 font-bold text-xl"><span>Total</span><span>₱0.00</span></div></div>}
-                                {step === 8 && <div className="text-center"><FileText size={64} className="mx-auto text-gray-300 mb-4"/><p>Sign Terms & Conditions</p><label className="flex justify-center gap-2 mt-4"><input type="checkbox" /> I Agree</label></div>}
-                                {![2,3,5,6,8].includes(step) && <input type="text" placeholder={`Enter ${stepData?.task}...`} className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#b425aa] outline-none" />}
-                            </div>
-                            <div className="flex justify-between items-center mt-auto">
-                                <button onClick={() => setStep(step - 1)} className={`text-gray-500 font-medium ${step === 1 ? 'invisible' : ''}`}>Back</button>
-                                <button onClick={handleNext} disabled={isSimulating} className="bg-[#b425aa] text-white px-8 py-3 rounded-xl font-bold shadow-md flex items-center gap-2 disabled:opacity-50">{step === 8 ? 'Finish' : 'Next'} <ArrowRight size={18} /></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // Placeholder for other features
-        const FeaturePlaceholder = ({ title, icon, onBack }) => (
-            <div className="text-center py-12">
-                <button onClick={onBack} className="mb-4 text-gray-500 hover:text-[#b425aa] flex items-center justify-center gap-1 mx-auto"><ArrowLeft size={16}/> Back</button>
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><img src={icon} className="w-10 h-10 object-contain" /></div>
-                <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-                <p className="text-gray-500">Feature loaded successfully.</p>
-            </div>
-        );
-
-        const SubscriptionCTA = ({ onSubscribe }) => (
-            <section className="relative max-w-5xl mx-auto px-6 py-16 bg-gradient-to-r from-[#b425aa] to-[#c80ec9] rounded-3xl shadow-2xl overflow-hidden my-12 text-center">
-                <div className="relative z-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f3e329] text-[#c80ec9] mb-6 shadow-lg"><Sparkles className="h-8 w-8" /></div>
-                    <h2 className="text-3xl md:text-4xl font-bold font-[Oswald] text-white mb-6">Unlock Advanced Wellness</h2>
-                    <Button onClick={onSubscribe} size="lg" className="bg-[#f3e329] text-[#c80ec9] px-10 py-4 text-lg font-[Montserrat] rounded-full mx-auto">Subscribe Now <ArrowRight className="ml-2" /></Button>
-                </div>
-            </section>
-        );
-
-        // DASHBOARD HOME
+        // Dashboard Home View
         const DashboardHome = ({ user, onNavigate }) => (
             <div className="space-y-8">
                 <div className="bg-[#b425aa] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
@@ -636,12 +477,42 @@
             </div>
         );
 
+        // Feature Placeholder Generic View
+        const FeaturePlaceholder = ({ title, icon, onBack }) => (
+            <div className="text-center py-12">
+                <button onClick={onBack} className="mb-4 text-gray-500 hover:text-[#b425aa] flex items-center justify-center gap-1 mx-auto"><ArrowLeft size={16}/> Back</button>
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><img src={icon} className="w-10 h-10 object-contain" /></div>
+                <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+                <p className="text-gray-500">Feature loaded successfully.</p>
+            </div>
+        );
+
+        const SubscriptionPlaceholder = ({ onBack }) => (
+             <div className="max-w-4xl mx-auto">
+                <button onClick={onBack} className="mb-4 text-gray-500 hover:text-[#b425aa] flex items-center gap-1"><ArrowLeft size={16}/> Back to Home</button>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f3e329] text-[#c80ec9] mb-6"><Sparkles size={32}/></div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Subscription Plans</h1>
+                    <p className="text-gray-500 mb-8 max-w-lg mx-auto">Unlock the full power of the Cognitio+ ecosystem with advanced analytics and resilience insights.</p>
+                    <div className="grid md:grid-cols-3 gap-6 text-left">
+                        {['Basic', 'Premium', 'Professional'].map((plan, i) => (
+                            <div key={plan} className={`border rounded-xl p-6 ${i===1 ? 'border-[#b425aa] bg-purple-50 relative' : 'border-gray-200'}`}>
+                                {i===1 && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#b425aa] text-white text-xs px-3 py-1 rounded-full">Most Popular</span>}
+                                <h3 className="font-bold text-xl mb-2">{plan}</h3>
+                                <p className="text-2xl font-bold mb-4">₱{i===0 ? '0' : i===1 ? '499' : '1,299'}<span className="text-sm font-normal text-gray-500">/mo</span></p>
+                                <Button className={`w-full ${i===1 ? 'bg-[#b425aa] text-white' : 'bg-gray-100 text-gray-900'}`}>{i===0 ? 'Current Plan' : 'Upgrade'}</Button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
         // --- 7. MAIN APP ORCHESTRATOR ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [currentView, setCurrentView] = useState('home');
             const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-            const [showOnboarding, setShowOnboarding] = useState(false);
 
             const handleNavigate = (view) => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -649,20 +520,8 @@
             };
 
             const handleLogin = (userData) => {
-                setAuthModalOpen(false);
-                if (!userData.onboardingCompleted) {
-                    setShowOnboarding(true);
-                } else {
-                    setUser(userData);
-                    handleNavigate('dashboard');
-                }
-                // Store partial user data temporarily
                 setUser(userData);
-            };
-
-            const handleOnboardingComplete = (finalUserData) => {
-                setShowOnboarding(false);
-                setUser(prev => ({ ...prev, ...finalUserData }));
+                setAuthModalOpen(false);
                 handleNavigate('dashboard');
             };
 
@@ -672,8 +531,6 @@
             };
 
             const renderContent = () => {
-                if (showOnboarding) return <OnboardingWizard onComplete={handleOnboardingComplete} />;
-                
                 switch (currentView) {
                     case 'home':
                         return user ? <DashboardHome user={user} onNavigate={handleNavigate} /> : (
@@ -691,6 +548,7 @@
                     case 'dashboard': return user ? <DashboardHome user={user} onNavigate={handleNavigate} /> : handleNavigate('home');
                     case 'settings': return <SettingsComponent onBack={() => handleNavigate('dashboard')} />;
                     case 'well-be': return <WellBe onBack={() => handleNavigate('dashboard')} />;
+                    case 'subscription-plans': return <SubscriptionPlaceholder onBack={() => handleNavigate(user ? 'dashboard' : 'home')} />;
                     default: return <FeaturePlaceholder title={currentView.replace('-', ' ').toUpperCase()} icon={ICONS.resilience} onBack={() => handleNavigate('dashboard')} />;
                 }
             };
