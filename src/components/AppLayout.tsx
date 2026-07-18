@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Hero from './Hero';
-import PillarsAndStats from './PillarsAndStats';
-import FeatureShowcase from './FeatureShowcase';
-import UserTypeShowcase from './UserTypeShowcase';
-import JourneyExplorer from './JourneyExplorer';
-import GrowthPointsSection from './GrowthPointsSection';
+import PillarsAndStats from './components/PillarsAndStats';
+import FeatureShowcase from './components/FeatureShowcase';
+import UserTypeShowcase from './components/UserTypeShowcase';
+import JourneyExplorer from './components/JourneyExplorer';
+import GrowthPointsSection from './components/GrowthPointsSection';
 import CommunityCallout from './CommunityCallout';
 import Footer from './Footer';
 import { UserType } from '@/data/journeyData';
