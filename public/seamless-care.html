@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seamless Care: Systems Thinking Blueprint</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@600;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- General Setup & Variables (Matching Target Style) --- */
+        :root {
+            --cognitio-primary: #b425aa; /* Deep Magenta/Pink */
+            --cognitio-purple: #c80ec9; /* Bright Fuchsia/Purple */
+            --cognitio-metallic-gold: #D4AF36; /* Metallic Gold Accent */
+            --font-title: 'Montserrat', sans-serif;
+            --font-subtitle: 'Poppins', sans-serif;
+            --font-body: 'Roboto Condensed', sans-serif;
+            --bg-light: #fefdff; /* Near white */
+            --bg-dark: #f0f0f5; /* Light grey/blue for sections */
+            --text-dark: #333;
+            --text-light: #f9f9f9;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 30px;
+            background-color: var(--bg-light);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 16px;
+        }
+        
+        /* --- Infographic Container & Headers --- */
+        .infographic-container {
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .banner-image {
+            width: calc(100% + 60px); 
+            height: auto;
+            display: block;
+            margin: -30px -30px 20px -30px; 
+            border-radius: 12px 12px 0 0; 
+        }
+
+        /* Main Document Title (H3 styled like the target's H2) */
+        h3.main-title {
+            font-family: var(--font-title);
+            font-weight: 700;
+            font-size: 2.5em;
+            text-align: center;
+            color: var(--cognitio-purple);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        /* Chapter Title (Custom section header) */
+        .chapter-title {
+            background-color: var(--cognitio-primary); /* Use primary color for chapter block */
+            color: white;
+            padding: 15px 25px;
+            margin: 30px 0 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-family: var(--font-title);
+            font-weight: 700;
+            font-size: 1.8em;
+            text-align: center;
+            border-bottom: 4px solid var(--cognitio-metallic-gold);
+        }
+
+        /* Section Subtitle (H4 styled like the target's H3) */
+        h4 {
+            font-family: var(--font-subtitle);
+            font-weight: 700;
+            font-size: 1.6em;
+            color: var(--cognitio-primary);
+            border-bottom: 3px solid var(--cognitio-metallic-gold);
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+        }
+
+        /* --- Figures & Cards (Key Figures) --- */
+        .figure-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .figure-block {
+            background-color: var(--bg-dark); 
+            padding: 20px 10px;
+            border-radius: 8px;
+            border: 2px solid var(--cognitio-purple);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        .figure-value {
+            font-family: var(--font-title);
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--cognitio-purple);
+            line-height: 1;
+        }
+        .figure-label {
+            font-family: var(--font-subtitle);
+            font-size: 1.1em;
+            color: var(--text-dark);
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        .figure-caption {
+            font-style: italic;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .insight-box {
+            background-color: var(--bg-dark);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 6px solid var(--cognitio-metallic-gold);
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            font-family: var(--font-body);
+        }
+        .insight-box strong {
+            color: var(--cognitio-purple);
+        }
+
+        /* --- Custom Lists (Co-Creation Strategy) --- */
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding-left: 40px; 
+            position: relative;
+            font-family: var(--font-body);
+            font-size: 1.05em;
+        }
+        li .icon {
+            color: var(--cognitio-primary); 
+            font-size: 1.4em;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        li strong {
+            font-family: var(--font-subtitle);
+            font-weight: 700;
+            color: var(--cognitio-purple);
+        }
+
+        /* --- Feedback Loops (Chart Block) --- */
+        .chart-block {
+            background-color: var(--cognitio-primary);
+            color: var(--text-light);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .chart-title {
+            font-family: var(--font-title);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: var(--cognitio-metallic-gold);
+            font-weight: 700;
+        }
+        .loop {
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--cognitio-metallic-gold);
+        }
+        .loop strong {
+            color: var(--cognitio-metallic-gold);
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            font-family: var(--font-subtitle);
+        }
+        .loop p {
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            text-align: left;
+            font-family: var(--font-body);
+        }
+        .loop img {
+            width: 100%;
+            max-width: 450px;
+            display: block;
+            margin: 10px auto 0;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            height: auto; 
+        }
+
+        /* --- Leverage Points (Solutions Showcase Style) --- */
+        .leverage-point-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        .leverage-point-block {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+            border-top: 4px solid var(--cognitio-metallic-gold);
+            text-align: center;
+        }
+        .leverage-point-block img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 50%;
+            border: 3px solid var(--cognitio-purple);
+            padding: 5px;
+            background-color: #fff;
+            margin-bottom: 10px;
+        }
+        .leverage-point-block strong {
+            font-family: var(--font-subtitle);
+            font-weight: 700;
+            color: var(--cognitio-purple);
+            font-size: 1.1em;
+            display: block;
+            margin-top: 5px;
+        }
+        .leverage-point-block p {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+            font-family: var(--font-body);
+        }
+
+        /* --- Structural Components (Component List) --- */
+        .component-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .component-item {
+            background-color: #fcfcfc;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            line-height: 1.6;
+            padding-left: 60px; 
+            position: relative;
+            min-height: 50px;
+            border-left: 4px solid var(--cognitio-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-family: var(--font-body);
+        }
+        .component-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 2px solid var(--cognitio-purple);
+            border-radius: 50%;
+            padding: 2px;
+            background: white;
+        }
+        .component-item strong {
+            color: var(--cognitio-primary);
+            font-weight: 700;
+            font-family: var(--font-subtitle);
+        }
+
+        /* --- Countermeasures and Buttons --- */
+        .countermeasure-button-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .countermeasure-button {
+            display: inline-block;
+            background-color: var(--cognitio-metallic-gold);
+            color: var(--cognitio-primary);
+            font-family: var(--font-subtitle);
+            font-weight: 700;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: background-color 0.3s;
+        }
+        .countermeasure-button:hover {
+            background-color: #e0b44b;
+        }
+        
+        /* --- CTA Section (Styled like Visual Summary) --- */
+        .cta-section {
+            background-color: var(--cognitio-purple);
+            color: white;
+            padding: 35px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 35px;
+            border: 4px solid var(--cognitio-metallic-gold);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        .cta-section h4 {
+            color: white; /* Override h4 style to white/gold */
+            font-family: var(--font-title);
+            font-size: 2em;
+            text-align: center;
+            border-bottom: 3px solid var(--cognitio-metallic-gold);
+            display: block;
+            margin-top: 0;
+            padding-bottom: 10px;
+        }
+        .cta-action-point {
+            font-family: var(--font-body);
+            font-size: 1.1em;
+            margin: 10px auto;
+            display: flex;
+            max-width: 600px;
+            align-items: center;
+            text-align: left;
+        }
+        .cta-action-point .icon {
+            font-size: 1.4em;
+            margin-right: 10px;
+            color: var(--cognitio-metallic-gold);
+            min-width: 25px;
+            text-align: center;
+        }
+        .cta-action-point strong {
+            font-weight: 700;
+            color: var(--cognitio-metallic-gold);
+            font-family: var(--font-subtitle);
+        }
+
+        .cta-button-group {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: var(--cognitio-metallic-gold);
+            color: var(--cognitio-primary);
+            font-family: var(--font-title);
+            font-weight: 700;
+            padding: 15px 40px;
+            border-radius: 25px;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 1.2em;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: white;
+            color: var(--cognitio-primary);
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .figure-grid {
+                grid-template-columns: 1fr;
+            }
+            .figure-value {
+                font-size: 2.2em;
+            }
+            .chapter-title {
+                font-size: 1.5em;
+            }
+            .leverage-point-grid {
+                grid-template-columns: 1fr;
+            }
+            .cta-section h4 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="infographic-container">
+    <img src="https://cognitioplus.aiwaapp.live/cache/media_cache/191eefbfe8e601af68533ecfccc74c89.png" alt="Seamless Care Mental Health Banner" class="banner-image">
+    <h3 class="main-title">SEAMLESS CARE: INTEGRATING MENTAL HEALTH</h3>
+    <p style="text-align: center; font-style: italic; color: var(--cognitio-primary); font-family: var(--font-subtitle);">A Systems Blueprint for Transforming Mental Health into Primary Healthcare (PHC) in the Philippines</p>
+
+    <div class="chapter-title">The Systemic Imperative</div>
+
+    <h4>Key Figures: The Crisis & Capacity Gap</h4>
+    <div class="figure-caption">FIGURE 1: Philippines Mental Health Burden & Workforce Capacity</div>
+    <div class="figure-grid">
+        <div class="figure-block">
+            <div class="figure-value">11.3%</div>
+            <div class="figure-label">Estimated Prevalence</div>
+            <p style="font-size: 0.8em; font-family: var(--font-body);">(Anxiety & Depression)</p>
+        </div>
+        <div class="figure-block">
+            <div class="figure-value">~500</div>
+            <div class="figure-label">Total Psychiatrists</div>
+            <p style="font-size: 0.8em; font-family: var(--font-body);">(For ~110M Population)</p>
+        </div>
+        <div class="figure-block">
+            <div class="figure-value">RA 11036</div>
+            <div class="figure-label">Legal Mandate</div>
+            <p style="font-size: 0.8em; font-family: var(--font-body);">(Requires MH Integration into PHC)</p>
+        </div>
+    </div>
+
+    <h4>Barriers to Seamless Care</h4>
+    <div class="insight-box">
+        The primary legislative gap is the <strong>Over-Centralization</strong> of resources and services in psychiatric hospitals. This creates a supply-side failure where care cannot reach the local PHC/Barangay level, directly contradicting the spirit of the Philippine Mental Health Act.
+    </div>
+
+    <h4>Co-Creation Strategy for Cultural Humility</h4>
+    <ul>
+        <li><span class="icon">🤝</span> <strong>Harnessing Filipino Values:</strong> Service design must be rooted in concepts like <strong>KAPWA</strong> (shared identity) and <strong>BAYANIHAN</strong> (communal support) to overcome deep-seated social <strong>STIGMA</strong>.</li>
+        <li><span class="icon">💰</span> <strong>Financial Leverage:</strong> Recent massive funding increases (PHP 57M to 1B) must be leveraged to decentralize resources and invest in community-based PHC systems.</li>
+    </ul>
+
+    <hr style="border-top: 1px dashed var(--cognitio-purple); margin: 30px 0;">
+
+    <div class="chapter-title">The Systems Thinking Blueprint</div>
+
+    <h4>CHART 1: Identifying Core Feedback Loops (Complex Adaptive System - CAS)</h4>
+    <div class="chart-block">
+        <div class="chart-title">The Health Sector as a CAS: Focus on Vicious and Virtuous Cycles</div>
+        <div class="loop">
+            <strong>Negative (Stabilizing) Loop: Stigma-Isolation Trap</strong>
+            <p>When societal stigma against mental illness is high, individuals are discouraged from seeking help, resulting in untreated conditions. These unaddressed cases remain hidden and often worsen, which in turn fuels the societal perception that mental illness is a dangerous or hidden problem, thus reinforcing the original stigma and completing the loop.</p>
+            <img src="https://cognitioplus.aiwaapp.live/cache/media_cache/dcdc04f11e37a584d7a9968c60219fa7.png" alt="Stigma Isolation Trap Diagram">
+        </div>
+        <div class="loop">
+            <strong>Negative (Stabilizing) Loop: Workforce-Burnout Trap</strong>
+            <p>The severe scarcity of licensed providers forces the few existing professionals to handle excessive caseloads. This leads directly to high rates of provider burnout and turnover. As providers leave the system, the overall workforce is further reduced, increasing the strain on those who remain and perpetuating the cycle of burnout.</p>
+            <img src="https://cognitioplus.aiwaapp.live/cache/media_cache/73aa163b8547d776fabad92f166c6cad.png" alt="Workforce Burnout Trap Diagram">
+        </div>
+        <div class="loop">
+            <strong>Positive (Reinforcing) Loop: Data-Driven Improvement Engine</strong>
+            <p>The deployment of analytics creates a structured mechanism for gathering and analyzing real-time data on user behavior, service utilization, and outcomes. When these data inform the refinement of interventions, outcomes improve, leading to increased community trust and user adoption. Higher adoption then generates more robust data, further accelerating the capacity for evidence-based adaptation.</p>
+            <img src="https://cognitioplus.aiwaapp.live/cache/media_cache/8d9ac228e5d3f0f67bd0e3bddf9a559f.png" alt="Data-Driven Improvement Engine Diagram">
+        </div>
+    </div>
+
+    <h4>High-Impact Leverage Points for Systemic Change</h4>
+    <div class="figure-caption">Targeted actions yield disproportionate results to break stabilizing loops.</div>
+    <div class="leverage-point-grid">
+        <div class="leverage-point-block">
+            <img src="https://cognitioplus.aiwaapp.live/cache/media_cache/3b2618f317c36f00c5991ac0e3a1b72a.png" alt="Paraprofessional Icon">
+            <strong>Leverage 1: Workforce Task Shifting</strong>
+            <p>Train 500+ Community Paraprofessionals (Breaks Workforce Trap)</p>
+        </div>
+        <div class="leverage-point-block">
+            <img src="https://appimize.app/assets/apps/user_1097/images/66f7d09fca94_876_1097.png" alt="Data Flow Icon">
+            <strong>Leverage 2: Integrated Information Flow</strong>
+            <p>Secure EHR/PhilHealth Integration (Activates Improvement Engine)</p>
+        </div>
+    </div>
+
+    <hr style="border-top: 1px dashed var(--cognitio-purple); margin: 30px 0;">
+
+    <div class="chapter-title">Foundational Structural Pillars</div>
+
+    <h4>Required Structural Components</h4>
+    <ul class="component-list">
+        <li class="component-item">
+            <img src="https://appimize.app/assets/apps/user_1097/images/6c2ccb2a1cf9_811_1097.png" alt="AI Icon">
+            <strong>Standardized Tools:</strong> Implementation of AI-powered self-assessment and screening for dynamic risk profiling at the community level.
+        </li>
+        <li class="component-item">
+            <img src="https://appimize.app/assets/apps/user_1097/images/797a4ebf6008_304_1097.png" alt="Training Icon">
+            <strong>Collaborative Capacity Building:</strong> Certifying mental health and well-being paraprofessionals to support communities, schools, and workplaces—building resilience where it’s needed most.
+        </li>
+        <li class="component-item">
+            <img src="https://appimize.app/assets/apps/user_1097/images/a00e6e94af97_251_1097.png" alt="Navigation Icon">
+            <strong>Seamless Navigation:</strong> Establishing clear and simple patient referral pathways allowing transitions between digital tools, community workers, and specialized care.
+        </li>
+    </ul>
+
+    <h4>Cognitio+ Countermeasures to Systemic Barriers</h4>
+    <div class="insight-box">
+        <strong>Barrier:</strong> Cost Prohibitive Care / Financial Constraints
+        <p style="margin-left: 10px;"><span class="icon">✅</span> <strong>Countermeasure:</strong> Implement Tiered/Subsidized Pricing and B2G Contracts to cross-subsidize free basic services for low-income groups.</p>
+        <div class="countermeasure-button-container">
+            <a href="https://cognitioplus.aiwaapp.live/service-customization/" class="countermeasure-button">Explore Service Customization: Experience Tiered Pricing</a>
+        </div>
+    </div>
+    <div class="insight-box">
+        <strong>Barrier:</strong> Digital Divide / Geographic Isolation (GIDA)
+        <p style="margin-left: 10px;"><span class="icon">📱</span> <strong>Countermeasure:</strong> Develop Offline-Enabled "Lite" Applications and leverage SMS/multi-platform support to reach geographically isolated and disadvantaged areas.</p>
+    </div>
+
+    <div class="cta-section">
+        <h4>DRIVE SEAMLESS INTEGRATION</h4>
+        <p style="font-size: 1.1em; margin-bottom: 20px; font-family: var(--font-subtitle);">The integration of mental health services requires immediate, systemic alignment and investment in decentralized, culturally responsive care.</p>
+        
+        <div class="cta-action-point">
+            <span class="icon">🏛️</span> <strong>Action 1:</strong> Budget Re-Allocation: Re-channel mental health budget from centralized hospitals to LGU-led PHC capacity building.
+        </div>
+        <div class="cta-action-point">
+            <span class="icon">🛠️</span> <strong>Action 2:</strong> Training Initiative: Immediately launch the task-shifting program to train 500+ Community Mental Health Paraprofessionals.
+        </div>
+        <div class="cta-action-point">
+            <span class="icon">📜</span> <strong>Action 3:</strong> Policy Review: Convene stakeholders to mandate EHR integration for seamless patient data flow and claims processing.
+        </div>
+
+        <div class="cta-button-group">
+            <a href="#solutions" class="cta-button">EXPERIENCE DEPLOYED SOLUTIONS</a>
+            <a href="https://cognitioplus.github.io/seamless-care/3LayerSolution.html" class="cta-button">EXPLORE 3-LAYER SOLUTION</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
