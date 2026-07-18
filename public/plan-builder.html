@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Build Your Plan – Cognitio+</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    header {
+      background: #4a90e2;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .service {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .service label {
+      flex: 1;
+    }
+
+    .service input[type="checkbox"] {
+      margin-left: 1rem;
+    }
+
+    #plan-summary {
+      margin-top: 2rem;
+      background: #eef6ff;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    #plan-summary h3 {
+      margin-top: 0;
+    }
+
+    .summary-item {
+      margin-bottom: 0.5rem;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    footer {
+      background: #222;
+      color: #ccc;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Build Your Mental Health Plan</h1>
+  </header>
+
+  <div class="container">
+    <h2 class="section-title">Select Services</h2>
+
+    <div class="service">
+      <label for="assessment">🧠 AI-Powered Mental Health Assessment</label>
+      <input type="checkbox" id="assessment" name="service" value="assessment">
+    </div>
+
+    <div class="service">
+      <label for="teletherapy">🤖 Teletherapy & E-Counseling</label>
+      <input type="checkbox" id="teletherapy" name="service" value="teletherapy">
+    </div>
+
+    <div class="service">
+      <label for="resilience">🏘️ Resilience Navigator Tool</label>
+      <input type="checkbox" id="resilience" name="service" value="resilience">
+    </div>
+
+    <div class="service">
+      <label for="caretalk">🧠 CareTalk Circles</label>
+      <input type="checkbox" id="caretalk" name="service" value="caretalk">
+    </div>
+
+    <div id="plan-summary">
+      <h3>Your Selected Plan</h3>
+      <ul id="summary-list"></ul>
+      <p id="total-cost">Total: ₱0</p>
+      <button onclick="submitPlan()">Request Booking</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Cognitio+. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const summaryList = document.getElementById('summary-list');
+    const totalCostEl = document.getElementById('total-cost');
+
+    const servicePrices = {
+      assessment: 0,
+      teletherapy: 800,
+      resilience: 350,
+      caretalk: 200
+    };
+
+    function updatePlan() {
+      summaryList.innerHTML = '';
+      let total = 0;
+
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          const name = cb.id;
+          const price = servicePrices[name];
+          total += price;
+
+          const li = document.createElement('li');
+          li.className = 'summary-item';
+          li.textContent = `${name.replace(/^\w/, c => c.toUpperCase()).replace(/([A-Z])/g, ' $1')} – ₱${price}`;
+          summaryList.appendChild(li);
+        }
+      });
+
+      totalCostEl.textContent = `Total: ₱${total}`;
+    }
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', updatePlan);
+    });
+
+    function submitPlan() {
+      alert("Thank you! Your plan has been submitted.");
+    }
+
+    updatePlan(); // Initial update
+  </script>
+
+</body>
+</html>
