@@ -1,23 +1,28 @@
 import React from 'react';
 import { USER_TYPES, UserType } from '@/data/journeyData';
-import { cn } from '@/lib/utils';
+import { ArrowRight } from 'lucide-react';
 
 interface Props {
   onPick: (u: UserType) => void;
 }
 
+/**
+ * Landing-page section presenting the four audience paths.
+ * Picking a card hands the user type to AppLayout, which pre-selects
+ * it in JourneyExplorer and smooth-scrolls to the journey section.
+ */
 const UserTypeShowcase: React.FC<Props> = ({ onPick }) => (
-  <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-20">
+  <section id="who-its-for" className="relative max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-20">
     <div className="text-center mb-10">
-      <span className="text-xs font-display font-bold tracking-[0.25em] uppercase text-c-purple-600">
-        Who is it for?
+      <span className="text-xs font-display font-bold tracking-[0.25em] uppercase text-c-teal-600">
+        Who it&rsquo;s for
       </span>
-      <h2 className="font-display font-extrabold text-3xl md:text-4xl text-cognitio-ink mt-2 mb-3 text-balance">
-        A platform built for <span className="gradient-text">every role</span>
+      <h2 className="font-display font-extrabold text-3xl md:text-5xl text-cognitio-ink mt-2 mb-3 text-balance">
+        One platform, <span className="gradient-text">four journeys</span>
       </h2>
       <p className="text-cognitio-ink/65 max-w-2xl mx-auto">
-        Pick your user type to explore how Cognitio+ adapts its dashboard,
-        tools, and journey to your specific needs.
+        Cognitio+ adapts to who you are — pick your path to preview a personalized
+        journey, tailored tools, and context-aware pricing.
       </p>
     </div>
 
@@ -29,24 +34,31 @@ const UserTypeShowcase: React.FC<Props> = ({ onPick }) => (
             key={u.id}
             type="button"
             onClick={() => onPick(u.id)}
-            className={cn(
-              'group text-left rounded-2xl bg-white border border-c-purple-100 p-6',
-              'hover:shadow-xl hover:-translate-y-1 transition-all duration-300'
-            )}
+            aria-label={`View the ${u.label} journey`}
+            className="group text-left rounded-2xl bg-white border border-c-purple-100 p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
           >
             <div
-              className="h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+              className="absolute top-0 left-0 h-1 w-full"
+              style={{ backgroundColor: u.hex }}
+            />
+            <div
+              className="h-12 w-12 rounded-xl flex items-center justify-center mb-4"
               style={{ backgroundColor: `${u.hex}15`, color: u.hex }}
             >
               <Icon className="h-6 w-6" strokeWidth={2} />
             </div>
-            <div className="font-display font-bold text-cognitio-ink mb-1.5">{u.label}</div>
-            <p className="text-sm text-cognitio-ink/65 leading-relaxed">{u.description}</p>
+            <div className="font-display font-bold text-cognitio-ink mb-1.5 leading-snug">
+              {u.label}
+            </div>
+            <p className="text-xs text-cognitio-ink/65 leading-relaxed mb-4">
+              {u.description}
+            </p>
             <div
-              className="mt-4 text-xs font-display font-bold uppercase tracking-wider"
+              className="text-xs font-display font-bold flex items-center gap-1"
               style={{ color: u.hex }}
             >
-              Explore journey →
+              View my journey
+              <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </button>
         );

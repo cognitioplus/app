@@ -70,7 +70,7 @@ const StageDetails: React.FC<Props> = ({ stage, userType }) => {
       {/* Cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards[0].items.map((card, i) => (
-          <DetailCardItem key={i} card={card} stage={stage} accentHex={stage.byUserType ? userMeta.hex : stage.hex} index={i} />
+          <DetailCardItem key={i} card={card} accentHex={stage.byUserType ? userMeta.hex : stage.hex} index={i} />
         ))}
       </div>
 
@@ -114,8 +114,8 @@ const StageDetails: React.FC<Props> = ({ stage, userType }) => {
   );
 };
 
-const DetailCardItem: React.FC<{ card: DetailCard; stage: JourneyStage; accentHex: string; index: number }> = ({
-  card, stage, accentHex, index,
+const DetailCardItem: React.FC<{ card: DetailCard; accentHex: string; index: number }> = ({
+  card, accentHex, index,
 }) => {
   return (
     <div
