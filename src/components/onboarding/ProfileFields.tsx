@@ -1,5 +1,6 @@
 import React from 'react';
 import { UserType } from '@/data/journeyData';
+import type { ProfileData } from '@/lib/types';
 import OptionGrid from './OptionGrid';
 import {
   GOALS_BY_TYPE, MHP_CARE_SETTINGS, COMMUNITY_TYPES, ORG_TYPES, WORKFORCE_SIZES,
@@ -9,8 +10,8 @@ interface Props {
   userType: UserType;
   goals: string[];
   setGoals: (g: string[]) => void;
-  profile: Record<string, any>;
-  setProfile: (p: Record<string, any>) => void;
+  profile: ProfileData;
+  setProfile: (p: ProfileData) => void;
   accentHex: string;
 }
 
@@ -48,7 +49,11 @@ const TextArea: React.FC<{ value: string; onChange: (v: string) => void; placeho
 );
 
 const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, setProfile, accentHex }) => {
-  const update = (key: string, value: any) => setProfile({ ...profile, [key]: value });
+  const update = (key: string, value: unknown) => setProfile({ ...profile, [key]: value });
+  // Safe accessors for free-form profile extras (typed as unknown)
+  const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+  const num = (v: unknown, d = 5): number => (typeof v === 'number' ? v : d);
+  const strArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
   return (
     <div className="space-y-7">
@@ -78,7 +83,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
           <div>
             <FieldLabel sub="Optional — helps calibrate tool recommendations.">Self-reported context</FieldLabel>
             <TextArea
-              value={profile.mhContext || ''}
+              value={str(profile.mhContext)}
               onChange={(v) => update('mhContext', v)}
               placeholder="Anxiety, burnout, trauma, or any context you'd like us to know."
             />
@@ -88,24 +93,24 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
               <FieldLabel sub="Wellness baseline">Current stress level (1–10)</FieldLabel>
               <input
                 type="range" min={1} max={10}
-                value={profile.stressLevel || 5}
+                value={num(profile.stressLevel)}
                 onChange={(e) => update('stressLevel', Number(e.target.value))}
                 className="w-full accent-c-purple-500"
               />
               <div className="text-sm font-display font-bold text-c-purple-600">
-                {profile.stressLevel || 5} / 10
+                {num(profile.stressLevel)} / 10
               </div>
             </div>
             <div>
               <FieldLabel sub="Wellness baseline">Sleep quality (1–10)</FieldLabel>
               <input
                 type="range" min={1} max={10}
-                value={profile.sleepQuality || 5}
+                value={num(profile.sleepQuality)}
                 onChange={(e) => update('sleepQuality', Number(e.target.value))}
                 className="w-full accent-c-purple-500"
               />
               <div className="text-sm font-display font-bold text-c-purple-600">
-                {profile.sleepQuality || 5} / 10
+                {num(profile.sleepQuality)} / 10
               </div>
             </div>
           </div>
@@ -118,7 +123,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
             <FieldLabel required>Care setting</FieldLabel>
             <OptionGrid
               options={MHP_CARE_SETTINGS}
-              selected={profile.careSettings || []}
+              selected={strArr(profile.careSettings)}
               onChange={(v) => update('careSettings', v)}
               accentHex={accentHex}
               columns={3}
@@ -127,16 +132,16 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FieldLabel>Estimated active caseload</FieldLabel>
-              <TextInput type="number" value={profile.caseload || ''} onChange={(v) => update('caseload', v)} placeholder="e.g. 25" />
+              <TextInput type="number" value={str(profile.caseload)} onChange={(v) => update('caseload', v)} placeholder="e.g. 25" />
             </div>
             <div>
               <FieldLabel>Years of practice</FieldLabel>
-              <TextInput type="number" value={profile.yearsPractice || ''} onChange={(v) => update('yearsPractice', v)} placeholder="e.g. 8" />
+              <TextInput type="number" value={str(profile.yearsPractice)} onChange={(v) => update('yearsPractice', v)} placeholder="e.g. 8" />
             </div>
           </div>
           <div>
             <FieldLabel>Primary client age range</FieldLabel>
-            <TextInput value={profile.clientAge || ''} onChange={(v) => update('clientAge', v)} placeholder="e.g. 18–35" />
+            <TextInput value={str(profile.clientAge)} onChange={(v) => update('clientAge', v)} placeholder="e.g. 18–35" />
           </div>
         </>
       )}
@@ -147,7 +152,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
             <FieldLabel required>Community type</FieldLabel>
             <OptionGrid
               options={COMMUNITY_TYPES}
-              selected={profile.communityType || ''}
+              selected={profile.communityType ?? ''}
               multi={false}
               onChange={(v) => update('communityType', v)}
               accentHex={accentHex}
@@ -157,17 +162,17 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FieldLabel>Population served</FieldLabel>
-              <TextInput type="number" value={profile.population || ''} onChange={(v) => update('population', v)} placeholder="e.g. 5000" />
+              <TextInput type="number" value={str(profile.population)} onChange={(v) => update('population', v)} placeholder="e.g. 5000" />
             </div>
             <div>
               <FieldLabel>Geographic scope</FieldLabel>
-              <TextInput value={profile.scope || ''} onChange={(v) => update('scope', v)} placeholder="e.g. Quezon City, District 2" />
+              <TextInput value={str(profile.scope)} onChange={(v) => update('scope', v)} placeholder="e.g. Quezon City, District 2" />
             </div>
           </div>
           <div>
             <FieldLabel>Existing funders / partners</FieldLabel>
             <TextArea
-              value={profile.partners || ''}
+              value={str(profile.partners)}
               onChange={(v) => update('partners', v)}
               placeholder="LGU, DSWD, civil society, foundations — separate by commas."
               rows={2}
@@ -182,7 +187,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
             <FieldLabel required>Organization type</FieldLabel>
             <OptionGrid
               options={ORG_TYPES}
-              selected={profile.orgType || ''}
+              selected={profile.orgType ?? ''}
               multi={false}
               onChange={(v) => update('orgType', v)}
               accentHex={accentHex}
@@ -193,7 +198,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
             <FieldLabel required>Workforce size</FieldLabel>
             <OptionGrid
               options={WORKFORCE_SIZES}
-              selected={profile.workforce || ''}
+              selected={profile.workforce ?? ''}
               multi={false}
               onChange={(v) => update('workforce', v)}
               accentHex={accentHex}
@@ -203,7 +208,7 @@ const ProfileFields: React.FC<Props> = ({ userType, goals, setGoals, profile, se
           <div>
             <FieldLabel sub="RA 11036, DOLE, accreditation, etc.">Compliance needs</FieldLabel>
             <TextArea
-              value={profile.compliance || ''}
+              value={str(profile.compliance)}
               onChange={(v) => update('compliance', v)}
               placeholder="What workplace mental health requirements are you addressing?"
               rows={2}
