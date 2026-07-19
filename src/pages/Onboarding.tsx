@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { supabase, getSessionId } from '@/lib/supabase';
+import { useAuth } from '@/hooks/use-auth';
+import { uploadVerificationDoc } from '@/lib/verification';
+import type { ProfileData } from '@/lib/types';
 import { USER_TYPES, UserType } from '@/data/journeyData';
 import {
   PH_REGIONS, VULNERABILITY_OPTIONS, URBANIZATION_OPTIONS, VERIFICATION_REQS, PROMO_CODES,
@@ -25,19 +28,9 @@ const STEPS: StepDef[] = [
   { id: 'review', title: 'Review & launch', subtitle: 'Step 6 — Confirm', number: 6 },
 ];
 
-function getOrCreateSessionId(): string {
-  const KEY = 'cognitio_session_id';
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
-}
-
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const sessionId = useMemo(() => getOrCreateSessionId(), []);
+  const sessionId = useMemo(() => getSessionId(), []);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -54,7 +47,14 @@ const Onboarding: React.FC = () => {
   const [promoCode, setPromoCode] = useState('');
   const [verificationDoc, setVerificationDoc] = useState<File | null>(null);
   const [goals, setGoals] = useState<string[]>([]);
-  const [profile, setProfile] = useState<Record<string, any>>({});
+  const [profile, setProfile] = useState<ProfileData>({});
+  // Explicit opt-in: contact details are shared with the CRM only when ticked.
+  const [crmConsent, setCrmConsent] = useState(false);
+  // Auth + uploaded verification document state
+  const { user } = useAuth();
+  const [docPath, setDocPath] = useState<string | null>(null);
+  const [docName, setDocName] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const userMeta = userType ? USER_TYPES.find((u) => u.id === userType)! : USER_TYPES[0];
   const accentHex = userMeta.hex;
@@ -74,30 +74,41 @@ const Onboarding: React.FC = () => {
   // Load any existing draft on mount
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('cognitio_onboarding')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('completed', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) {
-        setUserType(data.user_type);
-        setLanguage(data.language || 'en');
-        setRegion(data.region || '');
-        setFullName(data.full_name || '');
-        setEmail(data.email || '');
-        setOrganizationName(data.organization_name || '');
-        setVulnerabilities(data.vulnerabilities || []);
-        setUrbanization(data.urbanization || 'urban');
-        setHasFunder(!!data.has_external_funder);
-        setPromoCode(data.promo_code || '');
-        setGoals(data.goals || []);
-        setProfile(data.profile_data || {});
-        if (typeof data.current_step === 'number') {
-          setCurrentIdx(Math.min(Math.max(0, data.current_step - 1), STEPS.length - 1));
+      try {
+        const { data, error } = await supabase
+          .from('cognitio_onboarding')
+          .select('*')
+          .eq('session_id', sessionId)
+          .eq('completed', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          setUserType(data.user_type);
+          setLanguage(data.language || 'en');
+          setRegion(data.region || '');
+          setFullName(data.full_name || '');
+          setEmail(data.email || '');
+          setOrganizationName(data.organization_name || '');
+          setVulnerabilities(data.vulnerabilities || []);
+          setUrbanization(data.urbanization || 'urban');
+          setHasFunder(!!data.has_external_funder);
+          setPromoCode(data.promo_code || '');
+          setGoals(data.goals || []);
+          setProfile(data.profile_data || {});
+          setCrmConsent(!!data.crm_consent);
+          if (data.verification_doc_path) {
+            setDocPath(data.verification_doc_path);
+            setDocName(data.verification_doc_name || 'Uploaded document');
+          }
+          if (typeof data.current_step === 'number') {
+            setCurrentIdx(Math.min(Math.max(0, data.current_step - 1), STEPS.length - 1));
+          }
         }
+      } catch (err) {
+        console.error('Could not load onboarding draft:', err);
+        toast.error('Could not restore your saved progress — starting fresh.');
       }
     })();
   }, [sessionId]);
@@ -111,7 +122,10 @@ const Onboarding: React.FC = () => {
       case 'verify': {
         if (!userType) return false;
         const req = VERIFICATION_REQS[userType];
-        return !req.required || !!verificationDoc;
+        if (!req.required) return true;
+        // Required documents need a signed-in user (private Storage) and
+        // either a freshly selected file or one already uploaded.
+        return !!user && (!!verificationDoc || !!docPath);
       }
       case 'goals': {
         if (!userType) return false;
@@ -128,13 +142,17 @@ const Onboarding: React.FC = () => {
 
   const isLast = currentIdx === STEPS.length - 1;
 
-  // Save draft to DB on each navigation
-  const persistDraft = async (markComplete = false): Promise<boolean> => {
+  // Save draft to DB on each navigation (atomic upsert keyed by session_id)
+  const persistDraft = async (
+    markComplete = false,
+    docOverride?: { path: string; name: string }
+  ): Promise<boolean> => {
     if (!userType) return false;
     setSaving(true);
     try {
       const payload = {
         session_id: sessionId,
+        user_id: user?.id ?? null,
         user_type: userType,
         language,
         region,
@@ -146,39 +164,26 @@ const Onboarding: React.FC = () => {
         has_external_funder: hasFunder,
         promo_code: promoCode,
         promo_valid: !!promoEntry,
-        verification_doc_name: verificationDoc?.name ?? null,
+        verification_doc_name: docOverride?.name ?? docName ?? verificationDoc?.name ?? null,
+        verification_doc_path: docOverride?.path ?? docPath,
         goals,
         profile_data: profile,
         base_price: pricing.base,
         final_price: pricing.finalPrice,
-        discount_breakdown: pricing.lines as any,
+        discount_breakdown: pricing.lines,
         completed: markComplete,
         current_step: currentIdx + 1,
+        crm_consent: crmConsent,
         updated_at: new Date().toISOString(),
       };
 
-      // Upsert by session_id (manual: try update, else insert)
-      const { data: existing } = await supabase
+      const { error } = await supabase
         .from('cognitio_onboarding')
-        .select('id')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (existing?.id) {
-        const { error } = await supabase
-          .from('cognitio_onboarding')
-          .update(payload)
-          .eq('id', existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('cognitio_onboarding').insert(payload);
-        if (error) throw error;
-      }
+        .upsert(payload, { onConflict: 'session_id' });
+      if (error) throw error;
       return true;
-    } catch (e: any) {
-      console.error(e);
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : e);
       toast.error('Could not save your progress. Continuing locally.');
       return false;
     } finally {
@@ -189,11 +194,30 @@ const Onboarding: React.FC = () => {
   const handleNext = async () => {
     if (!canProceed) return;
     if (isLast) {
-      // Mark complete + CRM subscribe + navigate to dashboard
-      await persistDraft(true);
-      try {
-        if (email) {
-          await fetch('https://famous.ai/api/crm/69f85b6d28284c19361b5c25/subscribe', {
+      // 1) Upload the verification document (private Storage) if a new file
+      //    was selected and none has been uploaded yet.
+      let uploaded: { path: string; name: string } | undefined;
+      if (verificationDoc && !docPath && user) {
+        setUploading(true);
+        try {
+          uploaded = await uploadVerificationDoc(verificationDoc, user.id, sessionId);
+          setDocPath(uploaded.path);
+          setDocName(uploaded.name);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Document upload failed. Please try again.';
+          console.error('Verification upload failed:', message);
+          toast.error(message);
+          setUploading(false);
+          return; // never complete onboarding without the required document
+        } finally {
+          setUploading(false);
+        }
+      }
+      // 2) Mark complete, then optionally subscribe to updates (consent-gated).
+      await persistDraft(true, uploaded);
+      if (crmConsent && email) {
+        try {
+          const res = await fetch('https://famous.ai/api/crm/69f85b6d28284c19361b5c25/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -203,8 +227,12 @@ const Onboarding: React.FC = () => {
               tags: ['cognitio-plus', `user-type:${userType}`, 'onboarded'],
             }),
           });
+          if (!res.ok) throw new Error(`CRM subscribe failed (${res.status})`);
+        } catch (err) {
+          console.error('CRM subscribe error:', err);
+          toast.error('We could not subscribe you to updates — but your dashboard is ready.');
         }
-      } catch {}
+      }
       toast.success('Welcome to Cognitio+! Your dashboard is ready.');
       navigate(`/dashboard/${userType}`);
       return;
@@ -227,7 +255,7 @@ const Onboarding: React.FC = () => {
       canProceed={canProceed}
       isLast={isLast}
       accentHex={accentHex}
-      saving={saving}
+      saving={saving || uploading}
       sidePanel={
         showPricing ? (
           <PricingPreview pricing={pricing} userTypeLabel={userMeta.label} userTypeHex={accentHex} />
@@ -286,7 +314,7 @@ const Onboarding: React.FC = () => {
                 <button
                   key={l.id}
                   type="button"
-                  onClick={() => setLanguage(l.id as any)}
+                  onClick={() => setLanguage(l.id as 'en' | 'fil')}
                   className={cn(
                     'rounded-xl border-2 p-4 text-left transition-all',
                     language === l.id ? 'shadow-md' : 'border-c-purple-100 bg-white hover:border-c-purple-300'
@@ -391,10 +419,33 @@ const Onboarding: React.FC = () => {
               {VERIFICATION_REQS[userType].description}
             </p>
 
+            {/* Required documents live in private Storage — sign-in is mandatory */}
+            {VERIFICATION_REQS[userType].required && !user && (
+              <div className="rounded-2xl border-2 border-c-amber-300 bg-c-amber-50 p-5 mb-4">
+                <div className="font-display font-bold text-sm text-cognitio-ink mb-1">
+                  Sign in to upload your document
+                </div>
+                <p className="text-xs text-cognitio-ink/65 leading-relaxed mb-3">
+                  Verification documents are stored privately and are only ever accessible
+                  via secure, short-lived links. For your protection, uploading requires a
+                  signed-in account — your progress so far carries over automatically.
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => navigate('/auth?redirect=/onboarding')}
+                  className="rounded-full bg-c-purple-600 hover:bg-c-purple-700 font-display"
+                  size="sm"
+                >
+                  Sign in with a magic link
+                </Button>
+              </div>
+            )}
+
+            {(!VERIFICATION_REQS[userType].required || !!user) && (
             <label
               className={cn(
                 'block rounded-2xl border-2 border-dashed p-6 cursor-pointer transition-all hover:bg-c-purple-50/50',
-                verificationDoc ? 'border-c-green-400 bg-c-green-50/40' : 'border-c-purple-200 bg-white'
+                (verificationDoc || docPath) ? 'border-c-green-400 bg-c-green-50/40' : 'border-c-purple-200 bg-white'
               )}
             >
               <input
@@ -419,6 +470,14 @@ const Onboarding: React.FC = () => {
                       <X className="h-3 w-3" /> Remove
                     </button>
                   </>
+                ) : docPath ? (
+                  <>
+                    <FileCheck2 className="h-10 w-10 text-c-green-600 mb-2" />
+                    <div className="font-display font-bold text-sm text-cognitio-ink">{docName || 'Document uploaded'}</div>
+                    <div className="text-xs text-cognitio-ink/55 mt-1">
+                      Securely stored · Click to replace
+                    </div>
+                  </>
                 ) : (
                   <>
                     <Upload className="h-10 w-10 text-c-purple-500 mb-2" />
@@ -428,6 +487,7 @@ const Onboarding: React.FC = () => {
                 )}
               </div>
             </label>
+            )}
             {!VERIFICATION_REQS[userType].required && (
               <div className="mt-2 text-xs text-cognitio-ink/55 italic">
                 Documents not required for individuals — you can skip this.
@@ -504,8 +564,25 @@ const Onboarding: React.FC = () => {
               <ReviewRow label="External funder" value={hasFunder ? 'Yes' : 'No'} />
               {promoEntry && <ReviewRow label="Promo" value={promoEntry.label} />}
               <ReviewRow label="Goals" value={`${goals.length} selected`} />
-              {verificationDoc && <ReviewRow label="Verification" value={verificationDoc.name} />}
+              {(verificationDoc || docName) && <ReviewRow label="Verification" value={verificationDoc?.name ?? docName ?? ''} />}
             </div>
+          </div>
+
+          {/* Consent — required before any contact details leave the platform */}
+          <div className="rounded-2xl bg-white border border-c-purple-100 p-5">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={crmConsent}
+                onChange={(e) => setCrmConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-c-purple-300 accent-c-purple-600"
+              />
+              <span className="text-sm text-cognitio-ink/80 leading-relaxed">
+                <span className="font-display font-bold text-cognitio-ink">Keep me posted</span> —
+                I agree that Cognitio+ may email my onboarding summary and program updates to the
+                address above. Optional — your dashboard works either way, and you can unsubscribe anytime.
+              </span>
+            </label>
           </div>
 
           <div

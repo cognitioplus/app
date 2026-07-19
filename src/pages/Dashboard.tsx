@@ -1,38 +1,66 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase, clearSessionId, getSessionId } from '@/lib/supabase';
+import { useAuth, signOut } from '@/hooks/use-auth';
 import { USER_TYPES, UserType, STAGES } from '@/data/journeyData';
 import CognitioLogo from '@/components/CognitioLogo';
 import { Button } from '@/components/ui/button';
 import { Bell, Settings, LogOut, Trophy, Flame, Sparkles, ArrowRight, Home } from 'lucide-react';
 import { formatPHP } from '@/lib/pricing';
+import type { OnboardingRow } from '@/lib/types';
+import type { LucideIcon } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { userType: paramType } = useParams<{ userType: string }>();
   const navigate = useNavigate();
   const userType = (paramType as UserType) || 'individual';
+  const { user, loading: authLoading } = useAuth();
 
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<OnboardingRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
+  // The dashboard is personal: require a signed-in account.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate(`/auth?redirect=/dashboard/${userType}`, { replace: true });
+    }
+  }, [authLoading, user, navigate, userType]);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     (async () => {
-      const sessionId = localStorage.getItem('cognitio_session_id');
-      if (!sessionId) {
+      try {
+        // Make sure any anonymous draft is claimed before reading.
+        await supabase.rpc('claim_onboarding_draft', { p_session_id: getSessionId() });
+        const { data, error } = await supabase
+          .from('cognitio_onboarding')
+          .select('*')
+          .or(`user_id.eq.${user.id},session_id.eq.${getSessionId()}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        setData(data);
+      } catch (err) {
+        console.error('Dashboard load failed:', err);
+        setLoadError(true);
+      } finally {
         setLoading(false);
-        return;
       }
-      const { data } = await supabase
-        .from('cognitio_onboarding')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setData(data);
-      setLoading(false);
     })();
-  }, [userType]);
+  }, [user, authLoading, userType]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Sign-out failed:', err);
+    } finally {
+      clearSessionId();
+      navigate('/');
+    }
+  };
 
   const meta = USER_TYPES.find((u) => u.id === userType) ?? USER_TYPES[0];
   const stage = STAGES.find((s) => s.id === 'dashboard')!;
@@ -40,8 +68,19 @@ const Dashboard: React.FC = () => {
   const servicesStage = STAGES.find((s) => s.id === 'services')!;
   const services = servicesStage.byUserType ? servicesStage.byUserType[userType] : [];
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className="min-h-screen flex items-center justify-center text-cognitio-ink/60">Loading your dashboard…</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-cognitio-ink/70">
+        <p>We couldn’t load your dashboard. Please check your connection and try again.</p>
+        <Button onClick={() => window.location.reload()} className="rounded-full bg-c-purple-600 hover:bg-c-purple-700 font-display">
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -59,13 +98,16 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="rounded-full"><Bell className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" className="rounded-full"><Settings className="h-4 w-4" /></Button>
+            {user?.email && (
+              <span className="hidden lg:block text-xs text-cognitio-ink/50 font-display">{user.email}</span>
+            )}
             <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="font-display">
               <Home className="h-4 w-4 mr-1" /> Home
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { localStorage.removeItem('cognitio_session_id'); navigate('/'); }}
+              onClick={handleSignOut}
               className="font-display"
             >
               <LogOut className="h-4 w-4 mr-1" /> Sign Out
@@ -95,7 +137,7 @@ const Dashboard: React.FC = () => {
               <div className="mt-5 flex flex-wrap gap-3">
                 <StatPill icon={Trophy} label="Growth Points" value="450 GP" sub="≈ ₱3" />
                 <StatPill icon={Flame} label="Streak" value="3 days" sub="Keep going!" />
-                <StatPill icon={Sparkles} label="Plan" value={formatPHP(data.final_price)} sub={`${Math.round(((data.base_price - data.final_price) / Math.max(1, data.base_price)) * 100)}% off`} />
+                <StatPill icon={Sparkles} label="Plan" value={formatPHP(data.final_price ?? 0)} sub={`${Math.round((((data.base_price ?? 0) - (data.final_price ?? 0)) / Math.max(1, data.base_price ?? 1)) * 100)}% off`} />
               </div>
             )}
           </div>
@@ -176,7 +218,7 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const StatPill: React.FC<{ icon: any; label: string; value: string; sub: string }> = ({ icon: Icon, label, value, sub }) => (
+const StatPill: React.FC<{ icon: LucideIcon; label: string; value: string; sub: string }> = ({ icon: Icon, label, value, sub }) => (
   <div className="rounded-xl bg-white/15 backdrop-blur border border-white/25 px-3.5 py-2.5 flex items-center gap-3">
     <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center">
       <Icon className="h-4 w-4" />
