@@ -1,6 +1,8 @@
 import {
   Compass, UserCheck, Target, LayoutDashboard, Sparkles, Users, Trophy,
   Heart, Brain, Stethoscope, Building2, User as UserIcon
+,
+  type LucideIcon
 } from 'lucide-react';
 
 export type UserType = 'individual' | 'mhp' | 'community' | 'organization';
@@ -9,7 +11,7 @@ export interface UserTypeMeta {
   id: UserType;
   label: string;
   shortLabel: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;        // tailwind color name e.g. 'c-purple'
   hex: string;
   ring: string;
@@ -71,7 +73,7 @@ export interface JourneyStage {
   title: string;
   tagline: string;
   summary: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   hex: string;
   ramp: { bg: string; chip: string; text: string; border: string };
