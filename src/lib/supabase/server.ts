@@ -1,3 +1,7 @@
+// Reserved for the future Supabase Auth / SSR migration — NOT currently wired
+// into the app. This helper only runs on a server (Node/edge); it is never
+// imported by the browser bundle. The SPA's active client is
+// src/lib/supabase.ts. Uses the same env var names for consistency.
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
 
 export function createClient(request: Request) {
@@ -5,7 +9,7 @@ export function createClient(request: Request) {
 
   const supabase = createServerClient(
     process.env.VITE_SUPABASE_URL!,
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.VITE_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
